@@ -17,6 +17,13 @@ import concurrent.futures
 
 class ACOBinPacker:
     def __init__(self, problem: int, ants: int, e_rate: float):
+        """ Initialize ACOBinPacker instance
+        
+        Parameters:
+            problem: problem number (1 or 2)
+            ants: number of ants to use in 1 trial
+            e_rate: evaporation rate
+        """
         self.problem = problem
         if self.problem not in [1, 2]:
             raise ValueError("Invalid problem number")
@@ -92,12 +99,8 @@ class ACOBinPacker:
         pair_set = [self.node_to_pair(node) for node in path]
         for pair in pair_set:
             weight, bin = pair
-            if self.problem == 2:
-                weight = (weight ** 2) / 2
-            if bins.get(bin, -1) != -1:
-                bins[bin] += weight 
-            else:
-                bins[bin] = weight
+            weight = (weight ** 2) / 2 if self.problem == 2 else weight
+            bins[bin] = bins.get(bin, 0) + weight
         bins = list(bins.values())
         return max(bins) - min(bins)
     
