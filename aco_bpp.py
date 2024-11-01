@@ -10,6 +10,7 @@ BPP2: Bin Packing Problem 2
 - 50 bins
 '''
 
+import argparse
 import numpy as np
 import random
 import concurrent.futures
@@ -147,9 +148,18 @@ class ACOBinPacker:
 
 
 def main():
-    p = 10
-    e = 0.9
-    bpp = ACOBinPacker(1, p, e)
+    args = argparse.ArgumentParser(description="ACO Bin Packing Problem")
+    args.add_argument("-p", "--problem", type=int, default=1)
+    args.add_argument("-a", "--ants", type=int, default=10)
+    args.add_argument("-e", "--e_rate", type=float, default=0.9)
+    parse = args.parse_args()
+    problem = parse.problem
+    p = parse.ants
+    e = parse.e_rate
+    if problem not in [1, 2] or p < 1 or e < 0 or e > 1:
+        raise ValueError("Invalid parameters.")
+    
+    bpp = ACOBinPacker(problem, p, e)
     best_path, best_fitness = bpp.run()
     print(f"Best Path: {best_path}")
     print(f"Best Fitness: {best_fitness}")
