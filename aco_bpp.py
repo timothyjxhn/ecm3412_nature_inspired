@@ -35,6 +35,9 @@ class ACOBinPacker:
         self.e_rate = e_rate
         self.ants = ants
         self.p_matrix = self.initialize_pheromones()
+        self.best_fitness = np.inf
+        self.worst_fitness = np.inf
+        self.avg_fitness = np.inf
 
     def run(self):
         """ Run the ACO algorithm to solve the Bin Packing Problem
@@ -44,6 +47,7 @@ class ACOBinPacker:
             fitness: fitness value of the best path
         """
         total_runs = total_fitness_evals // self.ants
+        all_fitness = []
         for i in range(total_runs):
             print(f"Run {i} of {total_runs}")
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -51,10 +55,12 @@ class ACOBinPacker:
                 runs = [future.result() for future in concurrent.futures.as_completed(futures)]
             for j in runs:
                 path, fitness = j
+                all_fitness.append(fitness)
                 self.pheromone_update(path, fitness)
             self.apply_evaporation()
-        best_path, best_fitness = self.single_ant_run()
-        return best_path, best_fitness
+        self.best_fitness = min(all_fitness)
+        self.worst_fitness = max(all_fitness)
+        self.avg_fitness = sum(all_fitness) / len(all_fitness)
 
     def single_ant_run(self):
         """ Run a single ant through the graph to find a path
@@ -160,9 +166,13 @@ def main():
         raise ValueError("Invalid parameters.")
     
     bpp = ACOBinPacker(problem, p, e)
-    best_path, best_fitness = bpp.run()
-    print(f"Best Path: {best_path}")
-    print(f"Best Fitness: {best_fitness}")
+    bpp.run()
+    print(f"ACO Bin Packing Problem {problem}\n{"".join(["="] * 20)}")
+    print(f"Parameters: Ants={p}, Evaporation Rate={e}")
+    print("Results:")
+    print(f"Best Fitness: {bpp.best_fitness}")
+    print(f"Worst Fitness: {bpp.worst_fitness}")
+    print(f"Average Fitness: {bpp.avg_fitness}")
 
 
 if __name__ == '__main__':
