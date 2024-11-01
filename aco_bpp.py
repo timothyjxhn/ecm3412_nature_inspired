@@ -14,6 +14,8 @@ import numpy as np
 import random
 import concurrent.futures
 
+total_fitness_evals = 10000
+
 
 class ACOBinPacker:
     def __init__(self, problem: int, ants: int, e_rate: float):
@@ -40,19 +42,29 @@ class ACOBinPacker:
             list: best path found by the algorithm
             fitness: fitness value of the best path
         """
-        best_path = []
-        best_fitness = np.inf
-        for _ in range(self.ants):
-            path = self.generate_path()
-            fitness = self.fitness_eval(path)
-            if fitness < best_fitness:
-                best_fitness = fitness
-                best_path = path
-            if fitness == 0:
-                break
-            self.pheromone_update(path, fitness)
+        total_runs = total_fitness_evals // self.ants
+        for i in range(total_runs):
+            print(f"Run {i} of {total_runs}")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(self.single_ant_run) for _ in range(self.ants)]
+                runs = [future.result() for future in concurrent.futures.as_completed(futures)]
+            for j in runs:
+                path, fitness = j
+                self.pheromone_update(path, fitness)
             self.apply_evaporation()
+        best_path, best_fitness = self.single_ant_run()
         return best_path, best_fitness
+
+    def single_ant_run(self):
+        """ Run a single ant through the graph to find a path
+        
+        Returns:
+            list: a path found by an ant
+            fitness: fitness value of the path
+        """
+        path = self.generate_path()
+        fitness = self.fitness_eval(path)
+        return path, fitness
 
     def initialize_pheromones(self):
         """ Initialize and returns pheromone with random values
@@ -134,22 +146,11 @@ class ACOBinPacker:
         return (item, bin)
 
 
-def run_bpp(bpp_instance):
-    return bpp_instance.run()
-
-
 def main():
-    fitness_evaluations = 10000
-    p = 100
-    e = 0.6
-    bpp = [ACOBinPacker(1, p, e) for _ in range(5)]
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        runs = list(executor.map(run_bpp, bpp))
-
-    best_run = min(runs, key=lambda x: x[1])
-    best_path, best_fitness = best_run
-    print(f"Total Runs: {len(runs)}")
+    p = 10
+    e = 0.9
+    bpp = ACOBinPacker(1, p, e)
+    best_path, best_fitness = bpp.run()
     print(f"Best Path: {best_path}")
     print(f"Best Fitness: {best_fitness}")
 
