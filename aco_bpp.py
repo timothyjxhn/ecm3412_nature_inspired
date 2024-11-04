@@ -12,6 +12,7 @@ BPP2: Bin Packing Problem 2
 
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import concurrent.futures
 
@@ -38,6 +39,7 @@ class ACOBinPacker:
         self.best_fitness = np.inf
         self.worst_fitness = np.inf
         self.avg_fitness = np.inf
+        self.fitness_values_graph = []
 
     def run(self):
         """ Run the ACO algorithm to solve the Bin Packing Problem
@@ -55,14 +57,18 @@ class ACOBinPacker:
                 runs = [future.result() for future in concurrent.futures.as_completed(futures)]
             
             # update pheromones and apply evaporation sequentially after all ants have run
+            current_run_fitness = []
             for j in runs:
                 path, fitness = j
-                all_fitness.append(fitness)
+                current_run_fitness.append(fitness)
                 self.pheromone_update(path, fitness)
             self.apply_evaporation()
-        self.best_fitness = min(all_fitness)
-        self.worst_fitness = max(all_fitness)
-        self.avg_fitness = sum(all_fitness) / len(all_fitness)
+            all_fitness.append(current_run_fitness)
+        temp = [x for xs in all_fitness for x in xs]
+        self.best_fitness = min(temp)
+        self.worst_fitness = max(temp)
+        self.avg_fitness = sum(temp) / len(temp)
+        self.fitness_values_graph = all_fitness
 
     def single_ant_run(self):
         """ Run a single ant through the graph to find a path
@@ -101,7 +107,7 @@ class ACOBinPacker:
             bin_choices = self.p_matrix[current_node] # refer to row of current node to find next bin choices
             total_pheromone = sum(bin_choices)
             normalized_pheromones = [pheromone / total_pheromone for pheromone in bin_choices]
-            selected_node = random.choices([i for i in range(len(bin_choices))], normalized_pheromones)[0]
+            selected_node = random.choices(list(range(len(bin_choices))), normalized_pheromones)[0]
             path.append(selected_node)
             current_node = selected_node
         return path
@@ -154,6 +160,26 @@ class ACOBinPacker:
         return (item, bin)
 
 
+def plot_graph(fitness_values: list, filename: str):
+    """Plot fitness values over time
+    
+    Parameters:
+        fitness_values: list of lists of fitness values
+    """
+    iterations = list(range(1, len(fitness_values) + 1))
+    avg_fitness = [sum(values) / len(values) for values in fitness_values]
+    min_fitness = [min(values) for values in fitness_values]
+    max_fitness = [max(values) for values in fitness_values]
+    plt.figure(figsize=(10, 6))
+    plt.plot(iterations, avg_fitness, label="Average Fitness", color="blue", linewidth=2)
+    plt.fill_between(iterations, min_fitness, max_fitness, color="lightblue", alpha=0.4, label="Fitness Range (Min to Max)")
+    plt.xlabel("Iterations")
+    plt.ylabel("Fitness Value")
+    plt.title("Fitness Value Over Time")
+    plt.legend()
+    plt.savefig(filename, format="png", dpi=300)
+
+
 def main():
     args = argparse.ArgumentParser(description="ACO Bin Packing Problem")
     args.add_argument("-p", "--problem", type=int, default=1)
@@ -166,14 +192,14 @@ def main():
     if problem not in [1, 2] or p < 1 or e < 0 or e > 1:
         raise ValueError("Invalid parameters.")
     
+    print(f"Running ACO Bin Packing Problem {problem} with {p} ants and evaporation rate of {e}")
     bpp = ACOBinPacker(problem, p, e)
     bpp.run()
-    print(f"ACO Bin Packing Problem {problem}\n{'=' * 20}")
-    print(f"Parameters: Ants={p}, Evaporation Rate={e}")
     print("Results:")
     print(f"Best Fitness: {bpp.best_fitness}")
     print(f"Worst Fitness: {bpp.worst_fitness}")
     print(f"Average Fitness: {bpp.avg_fitness}")
+    plot_graph(bpp.fitness_values_graph, f"bpp{problem}_fitness_plot_p{p}_e{e}.png")
 
 
 if __name__ == '__main__':
