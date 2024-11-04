@@ -48,11 +48,13 @@ class ACOBinPacker:
         """
         total_runs = total_fitness_evals // self.ants
         all_fitness = []
-        for i in range(total_runs):
-            print(f"Run {i} of {total_runs}")
+        for _ in range(total_runs):
+            # run ants concurrently
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = [executor.submit(self.single_ant_run) for _ in range(self.ants)]
                 runs = [future.result() for future in concurrent.futures.as_completed(futures)]
+            
+            # update pheromones and apply evaporation sequentially after all ants have run
             for j in runs:
                 path, fitness = j
                 all_fitness.append(fitness)
@@ -81,11 +83,10 @@ class ACOBinPacker:
         """
         axis_len = (self.no_of_items * self.no_of_bins) + 1
         matrix = np.zeros((axis_len, axis_len))
-        # initialize edge from start node to 1st item nodes
-        matrix[0, 1:self.no_of_bins + 1] = np.random.random(self.no_of_bins)
-        for i in range(1, axis_len - self.no_of_bins - 1, self.no_of_bins):
-            start_node = i + self.no_of_bins
-            matrix[i:start_node, start_node:start_node + self.no_of_bins] = np.random.random((self.no_of_bins, self.no_of_bins))
+        matrix[0, 1:self.no_of_bins + 1] = np.random.random(self.no_of_bins) # initialize edge from start node to 1st item nodes
+        for x in range(1, axis_len - self.no_of_bins - 1, self.no_of_bins):
+            y = x + self.no_of_bins # x, y is xy coordinate of sub-matrix corner to start from
+            matrix[x:y, y:y + self.no_of_bins] = np.random.random((self.no_of_bins, self.no_of_bins))
         return matrix
         
     def generate_path(self):
@@ -96,8 +97,8 @@ class ACOBinPacker:
         """
         path = [0]
         current_node = 0
-        for i in range(self.no_of_items):
-            bin_choices = self.p_matrix[current_node]
+        for _ in range(self.no_of_items):
+            bin_choices = self.p_matrix[current_node] # refer to row of current node to find next bin choices
             total_pheromone = sum(bin_choices)
             normalized_pheromones = [pheromone / total_pheromone for pheromone in bin_choices]
             selected_node = random.choices([i for i in range(len(bin_choices))], normalized_pheromones)[0]
@@ -115,7 +116,7 @@ class ACOBinPacker:
             Value of diff between heaviest and lightest bin 
         """
         bins = {}
-        pair_set = [self.node_to_pair(node) for node in path]
+        pair_set = [self.node_to_pair(node) for node in path] # convert node identifier to pair of item weight and bin number
         for pair in pair_set:
             weight, bin = pair
             weight = (weight ** 2) / 2 if self.problem == 2 else weight
@@ -167,7 +168,7 @@ def main():
     
     bpp = ACOBinPacker(problem, p, e)
     bpp.run()
-    print(f"ACO Bin Packing Problem {problem}\n{"".join(["="] * 20)}")
+    print(f"ACO Bin Packing Problem {problem}\n{'=' * 20}")
     print(f"Parameters: Ants={p}, Evaporation Rate={e}")
     print("Results:")
     print(f"Best Fitness: {bpp.best_fitness}")
