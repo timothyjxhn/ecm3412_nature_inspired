@@ -159,25 +159,24 @@ class ACOBinPacker:
         bin = (node - 1) % self.no_of_items + 1
         return (item, bin)
 
-
-def plot_graph(fitness_values: list, filename: str):
-    """Plot fitness values over time
-    
-    Parameters:
-        fitness_values: list of lists of fitness values
-    """
-    iterations = list(range(1, len(fitness_values) + 1))
-    avg_fitness = [sum(values) / len(values) for values in fitness_values]
-    min_fitness = [min(values) for values in fitness_values]
-    max_fitness = [max(values) for values in fitness_values]
-    plt.figure(figsize=(10, 6))
-    plt.plot(iterations, avg_fitness, label="Average Fitness", color="blue", linewidth=2)
-    plt.fill_between(iterations, min_fitness, max_fitness, color="lightblue", alpha=0.4, label="Fitness Range (Min to Max)")
-    plt.xlabel("Iterations")
-    plt.ylabel("Fitness Value")
-    plt.title("Fitness Value Over Time")
-    plt.legend()
-    plt.savefig(filename, format="png", dpi=300)
+    def plot_graph(self):
+        """Plot fitness values over time
+        
+        Parameters:
+            fitness_values: list of lists of fitness values
+        """
+        iterations = list(range(1, len(self.fitness_values_graph) + 1))
+        avg_fitness = [sum(values) / len(values) for values in self.fitness_values_graph]
+        min_fitness = [min(values) for values in self.fitness_values_graph]
+        max_fitness = [max(values) for values in self.fitness_values_graph]
+        plt.figure(figsize=(10, 6))
+        plt.plot(iterations, avg_fitness, label="Average Fitness", color="blue", linewidth=2)
+        plt.fill_between(iterations, min_fitness, max_fitness, color="lightblue", alpha=0.4, label="Fitness Range (Min to Max)")
+        plt.xlabel("Iterations")
+        plt.ylabel("Fitness Value")
+        plt.title("Fitness Value Over Time")
+        plt.legend()
+        plt.savefig(f"bpp{self.problem}_fitness_plt_p{self.ants}_e{self.e_rate}", format="png", dpi=300)
 
 
 def main():
@@ -199,7 +198,7 @@ def main():
     print(f"Best Fitness: {bpp.best_fitness}")
     print(f"Worst Fitness: {bpp.worst_fitness}")
     print(f"Average Fitness: {bpp.avg_fitness}")
-    plot_graph(bpp.fitness_values_graph, f"bpp{problem}_fitness_plot_p{p}_e{e}.png")
+    bpp.plot_graph()
 
 
 if __name__ == '__main__':
