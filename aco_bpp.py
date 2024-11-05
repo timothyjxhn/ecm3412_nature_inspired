@@ -135,7 +135,7 @@ class ACOBinPacker:
             Value of diff between heaviest and lightest bin 
         """
         bins = {}
-        pair_set = [self.node_to_pair(node) for node in path] # convert node identifier to pair of item weight and bin number
+        pair_set = [self.node_to_pair(node) for node in path if node != 0] # convert node identifier to pair of item weight and bin number
         for pair in pair_set:
             weight, bin = pair
             weight = (weight ** 2) / 2 if self.problem == 2 else weight
@@ -168,8 +168,8 @@ class ACOBinPacker:
         """
         if node == 0:
             return (0, 0)
-        item = (node - 1) // self.no_of_items + 1
-        bin = (node - 1) % self.no_of_items + 1
+        item = ((node - 1) // self.no_of_bins) + 1
+        bin = ((node - 1) % self.no_of_bins) + 1
         return (item, bin)
 
     def plot_graph(self):
@@ -199,6 +199,7 @@ def main():
     args.add_argument("-p", "--problem", type=int, default=1)
     args.add_argument("-a", "--ants", type=int, default=10)
     args.add_argument("-e", "--e_rate", type=float, default=0.9)
+    args.add_argument("-g", "--graph", action="store_true")
     parse = args.parse_args()
     problem = parse.problem
     p = parse.ants
@@ -213,7 +214,8 @@ def main():
     print(f"Best Fitness: {bpp.best_fitness}")
     print(f"Worst Fitness: {bpp.worst_fitness}")
     print(f"Average Fitness: {bpp.avg_fitness}")
-    bpp.plot_graph()
+    if parse.graph:
+        bpp.plot_graph()
 
 
 if __name__ == '__main__':
