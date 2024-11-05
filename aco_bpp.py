@@ -8,6 +8,19 @@ BPP2: Bin Packing Problem 2
 - 500 items
 - weight of item i is (i^2)/2 (e.g. item 1 has weight 0.5, item 2 has weight 2, etc.)
 - 50 bins
+
+Instructions to run:
+- Python version:
+    Minimum: 3.6
+    Recommended: 3.12
+- Install required packages with the following command:
+    pip install -r requirements.txt
+- Run the script with the following command:
+    python aco_bpp.py -p <problem_number> -a <ants> -e <evaporation_rate>
+- problem_number: 1 or 2
+- ants: number of ants to use in 1 trial
+- evaporation_rate: between 0 and 1
+- Example: python aco_bpp.py -p 1 -a 10 -e 0.9
 '''
 
 import argparse
@@ -160,11 +173,13 @@ class ACOBinPacker:
         return (item, bin)
 
     def plot_graph(self):
-        """Plot fitness values over time
+        """Plot graph to show fitness values over time for particular instance
         
         Parameters:
             fitness_values: list of lists of fitness values
         """
+        if not self.fitness_values_graph:
+            return
         iterations = list(range(1, len(self.fitness_values_graph) + 1))
         avg_fitness = [sum(values) / len(values) for values in self.fitness_values_graph]
         min_fitness = [min(values) for values in self.fitness_values_graph]
@@ -176,7 +191,7 @@ class ACOBinPacker:
         plt.ylabel("Fitness Value")
         plt.title("Fitness Value Over Time")
         plt.legend()
-        plt.savefig(f"bpp{self.problem}_fitness_plt_p{self.ants}_e{self.e_rate}", format="png", dpi=300)
+        plt.savefig(f"bpp{self.problem}_fitness_plt_p{self.ants}_e{self.e_rate}.png", format="png", dpi=300)
 
 
 def main():
