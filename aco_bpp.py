@@ -44,7 +44,7 @@ class ACOBinPacker:
         self.problem = problem
         if self.problem not in [1, 2]:
             raise ValueError("Invalid problem number")
-        self.no_of_items = 500 if problem == 1 else 500
+        self.no_of_items = 500
         self.no_of_bins = 10 if problem == 1 else 50
         self.e_rate = e_rate
         self.ants = ants
@@ -115,14 +115,12 @@ class ACOBinPacker:
             a list of node numbers (integers) representing the path
         """
         path = [0]
-        current_node = 0
         for _ in range(self.no_of_items):
-            bin_choices = self.p_matrix[current_node] # refer to row of current node to find next bin choices
+            bin_choices = self.p_matrix[path[-1]] # refer to row of current node to find next bin choices
             total_pheromone = sum(bin_choices)
             normalized_pheromones = [pheromone / total_pheromone for pheromone in bin_choices]
             selected_node = random.choices(list(range(len(bin_choices))), normalized_pheromones)[0]
             path.append(selected_node)
-            current_node = selected_node
         return path
      
     def fitness_eval(self, path: list):
@@ -169,7 +167,7 @@ class ACOBinPacker:
         if node == 0:
             return (0, 0)
         item = ((node - 1) // self.no_of_bins) + 1
-        bin = ((node - 1) % self.no_of_bins) + 1
+        bin = node % self.no_of_bins
         return (item, bin)
 
     def plot_graph(self):
